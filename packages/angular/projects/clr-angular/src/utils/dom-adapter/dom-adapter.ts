@@ -11,9 +11,19 @@
  */
 
 import { Injectable } from '@angular/core';
+import { DragPointPosition } from '../drag-and-drop/interfaces/drag-event.interface';
 
 @Injectable()
 export class DomAdapter {
+  centerOfRect(clientRect: ClientRect): DragPointPosition {
+    return {
+      pageX: (clientRect.left + clientRect.right) / 2,
+      pageY: (clientRect.top + clientRect.bottom) / 2,
+    };
+  }
+  convertRemToPixel(rem: number): number {
+    return rem * parseFloat(getComputedStyle(document.documentElement).fontSize);
+  }
   userDefinedWidth(element: HTMLElement): number {
     element.classList.add('datagrid-cell-width-zero');
     const userDefinedWidth = this.clientRect(element).width;

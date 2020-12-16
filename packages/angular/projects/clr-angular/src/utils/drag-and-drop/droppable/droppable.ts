@@ -19,11 +19,15 @@ import { DragAndDropEventBusService } from '../providers/drag-and-drop-event-bus
 })
 export class ClrDroppable<T> implements OnInit, OnDestroy {
   private dragStartSubscription: Subscription;
+  private dragHitTestSubscription: Subscription; // emit Hit to resolve overlapping droppable
   private dragMoveSubscription: Subscription;
   private dragEndSubscription: Subscription;
+  private animationSubscription: Subscription;
 
   private droppableEl: any;
   private clientRect: ClientRect;
+  public clientCenter: DragPointPosition;
+  public omitFromDragOver = false;
 
   constructor(
     private el: ElementRef,
@@ -138,6 +142,7 @@ export class ClrDroppable<T> implements OnInit, OnDestroy {
 
     if (!this.clientRect) {
       this.clientRect = this.domAdapter.clientRect(this.droppableEl);
+      this.clientCenter = this.domAdapter.centerOfRect(this.clientRect);
     }
 
     if (
@@ -159,17 +164,36 @@ export class ClrDroppable<T> implements OnInit, OnDestroy {
     // Subscribe to dragMoved and dragEnded only if draggable and droppable have a matching group key.
     if (this.isDraggableMatch) {
       this.dragStartEmitter.emit(new ClrDragEvent(dragStartEvent));
+      this.dragHitTestSubscription = this.eventBus.dragHitTested.subscribe((dragMoveEvent: DragEventInterface<T>) => {
+        this.onDragHitTest(dragMoveEvent);
+      });
       this.dragMoveSubscription = this.eventBus.dragMoved.subscribe((dragMoveEvent: DragEventInterface<T>) => {
         this.onDragMove(dragMoveEvent);
       });
       this.dragEndSubscription = this.eventBus.dragEnded.subscribe((dragEndEvent: DragEventInterface<T>) => {
         this.onDragEnd(dragEndEvent);
       });
+      this.animationSubscription = this.eventBus.animation.subscribe((animationEvent: AnimationEvent) => {
+        this.onAnimation(animationEvent);
+      });
+    }
+  }
+
+  private onDragHitTest(dragMoveEvent: DragEventInterface<T>): void {
+    const isInDropArea = this.isInDropArea(dragMoveEvent.dropPointPosition);
+    if (isInDropArea) {
+      // emit hit event
+      const dragHitEvent = {
+        type: DragEventType.DRAG_HIT,
+        dragPosition: dragMoveEvent.dragPosition,
+        droppable: this,
+      };
+      this.eventBus.broadcast(dragHitEvent);
     }
   }
 
   private onDragMove(dragMoveEvent: DragEventInterface<T>): void {
-    const isInDropArea = this.isInDropArea(dragMoveEvent.dropPointPosition);
+    const isInDropArea = !this.omitFromDragOver && this.isInDropArea(dragMoveEvent.dropPointPosition);
     if (!this._isDraggableOver && isInDropArea) {
       this.isDraggableOver = true;
       const dragEnterEvent = { ...dragMoveEvent, type: DragEventType.DRAG_ENTER };
@@ -183,6 +207,12 @@ export class ClrDroppable<T> implements OnInit, OnDestroy {
     }
 
     this.dragMoveEmitter.emit(new ClrDragEvent(dragMoveEvent));
+  }
+
+  private onAnimation(animationEvent: AnimationEvent): void {
+    // some treeNode can be expanded/collapsed
+    delete this.clientRect;
+    delete this.clientCenter; // try to retrigger calculations
   }
 
   private onDragEnd(dragEndEvent: DragEventInterface<T>): void {
@@ -204,21 +234,31 @@ export class ClrDroppable<T> implements OnInit, OnDestroy {
       this.isDraggableOver = false;
     }
     this.dragEndEmitter.emit(new ClrDragEvent(dragEndEvent));
+    this.unsubscribeFrom(this.dragHitTestSubscription);
     this.unsubscribeFrom(this.dragMoveSubscription);
     this.unsubscribeFrom(this.dragEndSubscription);
+    this.unsubscribeFrom(this.animationSubscription);
     this.isDraggableMatch = false;
     delete this.clientRect;
+    delete this.clientCenter;
   }
 
   ngOnInit() {
     this.dragStartSubscription = this.eventBus.dragStarted.subscribe((dragStartEvent: DragEventInterface<T>) => {
       this.onDragStart(dragStartEvent);
     });
+    // are we late to the party?
+    const missedDragStartEvent: DragEventInterface<T> = this.eventBus.getActiveDragStartEvent();
+    if (missedDragStartEvent) {
+      this.onDragStart(missedDragStartEvent);
+    }
   }
 
   ngOnDestroy() {
     this.unsubscribeFrom(this.dragStartSubscription);
+    this.unsubscribeFrom(this.dragHitTestSubscription);
     this.unsubscribeFrom(this.dragMoveSubscription);
     this.unsubscribeFrom(this.dragEndSubscription);
+    this.unsubscribeFrom(this.animationSubscription);
   }
 }

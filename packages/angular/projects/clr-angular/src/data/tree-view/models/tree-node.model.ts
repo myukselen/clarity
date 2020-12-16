@@ -11,6 +11,7 @@ export abstract class TreeNodeModel<T> {
   nodeId: string;
   expanded: boolean;
   selected = new BehaviorSubject<ClrSelectedState>(ClrSelectedState.UNSELECTED);
+  firstNode = false; // parent or tree set this property
   model: T | null;
   /*
    * Ideally, I would like to use a polymorphic this type here to ensure homogeneity of the tree, something like:

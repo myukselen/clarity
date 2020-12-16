@@ -18,6 +18,10 @@ export enum KeyCodes {
   End = 'End',
 }
 
+export enum ChromeKeyCodes {
+  Space = ' ',
+}
+
 export enum IEKeyCodes {
   ArrowUp = 'Up',
   ArrowDown = 'Down',

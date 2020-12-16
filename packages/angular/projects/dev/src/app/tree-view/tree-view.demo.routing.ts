@@ -17,13 +17,15 @@ import { TreeNodeRoutingAbbeyRoadDemo } from './tree-node-routing/tree-node-rout
 import { TreeNodeRoutingRevolverDemo } from './tree-node-routing/tree-node-routing-revolver';
 import { TreeNodeRoutingRubberSoulDemo } from './tree-node-routing/tree-node-routing-rubber-soul';
 import { PreSelectionDemo } from './pre-selection/pre-selection';
+import { DndEagerDeclarativeTreeDemo } from './dnd-eager-declarative-tree/dnd-eager-declarative-tree';
 
 const ROUTES: Routes = [
   {
     path: '',
     component: TreeViewDemo,
     children: [
-      { path: '', redirectTo: 'eager-declarative', pathMatch: 'full' },
+      { path: '', redirectTo: 'dnd-eager-declarative', pathMatch: 'full' },
+      { path: 'dnd-eager-declarative', component: DndEagerDeclarativeTreeDemo },
       { path: 'eager-declarative', component: EagerDeclarativeTreeDemo },
       { path: 'eager-recursive', component: EagerRecursiveTreeDemo },
       { path: 'lazy-declarative', component: LazyDeclarativeTreeDemo },

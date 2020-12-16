@@ -7,6 +7,7 @@
 import { animate, style, transition, trigger, state } from '@angular/animations';
 import { isPlatformBrowser } from '@angular/common';
 import {
+  AfterViewInit,
   Component,
   ContentChildren,
   ElementRef,
@@ -14,6 +15,7 @@ import {
   Inject,
   Injector,
   Input,
+  NgZone,
   OnDestroy,
   OnInit,
   Optional,
@@ -38,6 +40,14 @@ import { TreeNodeModel } from './models/tree-node.model';
 import { TreeFeaturesService, TREE_FEATURES_PROVIDER } from './tree-features.service';
 import { TreeFocusManagerService } from './tree-focus-manager.service';
 import { ClrTreeNodeLink } from './tree-node-link';
+import { TreeDndManagerService } from './tree-dnd-manager.service';
+import { ClrDragEvent } from '../../utils/drag-and-drop/drag-event';
+import { ClrDropPositionComponent } from './drop-position.component';
+import { ClrTreeDropEvent } from './models/tree-drop-event';
+import { ClrDropPositionType } from './models/drop-position-type.enum';
+import { DragAndDropEventBusService } from '../../utils/drag-and-drop/providers/drag-and-drop-event-bus.service';
+import { DomAdapter } from '../../utils/dom-adapter/dom-adapter';
+import { GlobalDragModeService } from '../../utils/drag-and-drop/providers/global-drag-mode.service';
 
 const LVIEW_CONTEXT_INDEX = 8;
 
@@ -49,13 +59,17 @@ const LVIEW_CONTEXT_INDEX = 8;
     TREE_FEATURES_PROVIDER,
     IfExpandService,
     { provide: LoadingListener, useExisting: IfExpandService },
+    // GlobalDragModeService
   ],
   animations: [
     trigger('toggleChildrenAnim', [
-      transition('collapsed => expanded', [style({ height: 0 }), animate(200, style({ height: '*' }))]),
+      transition('collapsed => expanded', [
+        style({ height: 0, display: 'block' }),
+        animate(200, style({ height: '*' })),
+      ]),
       transition('expanded => collapsed', [style({ height: '*' }), animate(200, style({ height: 0 }))]),
       state('expanded', style({ height: '*', 'overflow-y': 'visible' })),
-      state('collapsed', style({ height: 0 })),
+      state('collapsed', style({ height: 0, display: 'none' })),
     ]),
   ],
   host: {
@@ -63,9 +77,11 @@ const LVIEW_CONTEXT_INDEX = 8;
     '[class.clr-tree-node]': 'true',
   },
 })
-export class ClrTreeNode<T> implements OnInit, OnDestroy {
+export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
   STATES = ClrSelectedState;
   private skipEmitChange = false;
+  private contentOverTimeout;
+  nodeDropTolerance = { top: -10, bottom: -10 }; // 10px or 0.5rem
 
   constructor(
     @Inject(UNIQUE_ID) public nodeId: string,
@@ -77,6 +93,11 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
     public expandService: IfExpandService,
     public commonStrings: ClrCommonStringsService,
     private focusManager: TreeFocusManagerService<T>,
+    private dndManager: TreeDndManagerService<T>, // naming? clrTree uses ..Service
+    private globalDragModeService: GlobalDragModeService,
+    private eventBus: DragAndDropEventBusService<T>,
+    private ngZone: NgZone,
+    private domAdapter: DomAdapter,
     injector: Injector
   ) {
     if (this.featuresService.recursion) {
@@ -95,6 +116,14 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
       this._model = new DeclarativeTreeNodeModel(parent ? (parent._model as DeclarativeTreeNodeModel<T>) : null);
     }
     this._model.nodeId = this.nodeId;
+
+    const toleranceValue = domAdapter.convertRemToPixel(-0.5);
+    this.nodeDropTolerance = {
+      top: toleranceValue,
+      bottom: toleranceValue,
+    };
+    this.dndManager.globalDragModeService = globalDragModeService; // could not grab in dndManager via DI
+    this.dndManager.eventBus = eventBus; // could not grab in dndManager via DI
   }
 
   _model: TreeNodeModel<T>;
@@ -148,14 +177,27 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
   set expanded(value: boolean) {
     this.expandService.expanded = value;
   }
+  // declerative tree can not now its model so, hoping to utilize clrDraggable
+  @Input('clrDraggable')
+  set modelData(value: T) {
+    this._model.model = value;
+  }
+  @Input('clrGroup') group: string | string[];
 
   @Output('clrExpandedChange') expandedChange = new EventEmitter<boolean>();
+  // @Output('clrDropBefore') dropBeforeEmitter: EventEmitter<ClrDragEvent<T>> = new EventEmitter();
+  @Output('clrPositionDrop') positionDropEmitter: EventEmitter<ClrTreeDropEvent<T>> = new EventEmitter();
+  @Output('clrDrop') dropEmitter: EventEmitter<ClrDragEvent<T>> = new EventEmitter();
 
   private subscriptions: Subscription[] = [];
 
   contentContainerTabindex = -1;
   @ViewChild('contentContainer', { read: ElementRef, static: true })
   private contentContainer: ElementRef;
+  @ViewChild('dropPositionBefore')
+  private dropPositionBefore: ClrDropPositionComponent<T>;
+  @ViewChild('dropPositionAfter')
+  private dropPositionAfter: ClrDropPositionComponent<T>;
 
   ngOnInit() {
     this._model.expanded = this.expanded;
@@ -182,9 +224,20 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
     );
   }
 
+  ngAfterViewInit() {
+    if (this._model.firstNode) {
+      this.dndManager.addDropPosition(this.nodeId, this.dropPositionBefore);
+    }
+    this.dndManager.addDropPosition(this.nodeId, this.dropPositionAfter);
+  }
+
   ngOnDestroy() {
     this._model.destroy();
     this.subscriptions.forEach(sub => sub.unsubscribe());
+    if (this._model.firstNode) {
+      this.dndManager.removeDropPosition(this.nodeId, this.dropPositionBefore);
+    }
+    this.dndManager.removeDropPosition(this.nodeId, this.dropPositionAfter);
   }
 
   // @ContentChild would have been more succinct
@@ -218,6 +271,7 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
     this.focusManager.broadcastFocusedNode(this.nodeId);
   }
 
+  // keyboard navigation
   onKeyDown(event: KeyboardEvent) {
     // Two reasons to prevent default behavior:
     // 1. to prevent scrolling on arrow keys
@@ -225,6 +279,15 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
     //    By default, pressing arrow key makes AT focus go into the nested content of the item.
     preventArrowKeyScroll(event);
 
+    if (!this.dndManager.dragMode) {
+      this.handleKeyDownForFocusMode(event);
+    } else {
+      this.handleKeyDownForDragMode(event);
+    }
+  }
+
+  // focus
+  handleKeyDownForFocusMode(event: KeyboardEvent) {
     // https://www.w3.org/TR/wai-aria-practices-1.1/#keyboard-interaction-22
     switch (keyValidator(event.key)) {
       case KeyCodes.ArrowUp:
@@ -251,7 +314,7 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
       case KeyCodes.Space:
         // to prevent scrolling on space key in this specific case
         event.preventDefault();
-        this.triggerDefaultAction();
+        this.startKeyboardDragMode();
         break;
       default:
         break;
@@ -281,6 +344,63 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
     }
   }
 
+  // drag and drop
+  startKeyboardDragMode() {
+    const clientRect = this.domAdapter.clientRect(this.contentContainer.nativeElement);
+    const clientCenter = this.domAdapter.centerOfRect(clientRect);
+    // registers current node as dragged
+    this.dndManager.start(this._model, clientCenter, this.group);
+  }
+
+  stopKeyboardDragMode(commit: boolean) {
+    const clientRect = this.domAdapter.clientRect(this.contentContainer.nativeElement);
+    const clientCenter = this.domAdapter.centerOfRect(clientRect);
+    // focus is on the current node, so clientCenter should be correct tree-node
+    this.dndManager.stop(commit, clientCenter);
+  }
+
+  handleKeyDownForDragMode(event: KeyboardEvent) {
+    // https://www.w3.org/TR/wai-aria-practices-1.1/#keyboard-interaction-22
+    switch (keyValidator(event.key)) {
+      case KeyCodes.ArrowUp:
+        this.dndManager.traverseUp(this._model);
+        break;
+      case KeyCodes.ArrowDown:
+        this.dndManager.traverseDown(this._model);
+        break;
+      case KeyCodes.ArrowRight:
+        this.dndManager.traverseRight(this._model);
+        break;
+      case KeyCodes.ArrowLeft:
+        this.dndManager.traverseLeft(this._model);
+        break;
+      case KeyCodes.Home:
+        // TODO
+        // this.focusManager.focusFirstVisibleNode();
+        break;
+      case KeyCodes.End:
+        // TODO
+        // this.focusManager.focusLastVisibleNode();
+        break;
+
+      case KeyCodes.Enter:
+        this.triggerDefaultAction();
+        break;
+      case KeyCodes.Escape:
+        this.stopKeyboardDragMode(false);
+        break;
+      case KeyCodes.Space:
+        // to prevent scrolling on space key in this specific case
+        event.preventDefault();
+        this.stopKeyboardDragMode(true);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // default action
+
   private triggerDefaultAction() {
     if (this.treeNodeLink) {
       this.treeNodeLink.activate();
@@ -289,5 +409,48 @@ export class ClrTreeNode<T> implements OnInit, OnDestroy {
         this._model.toggleSelection(this.featuresService.eager);
       }
     }
+  }
+
+  // events listened
+
+  insertBeforeNode($event: ClrDragEvent<T>) {
+    // this.dropBeforeEmitter.emit($event);
+    this.positionDropEmitter.emit(new ClrTreeDropEvent(ClrDropPositionType.BEFORE, $event));
+  }
+  insertAfterNode($event: ClrDragEvent<T>) {
+    // this.dropAfterEmitter.emit($event);
+    this.positionDropEmitter.emit(new ClrTreeDropEvent(ClrDropPositionType.AFTER, $event));
+  }
+  appendIntoNode($event: ClrDragEvent<T>) {
+    this.dropEmitter.emit(new ClrTreeDropEvent(ClrDropPositionType.OVER, $event));
+  }
+
+  onContentDragEnter($event: ClrDragEvent<T>) {
+    if (!this.expanded && this.isExpandable()) {
+      if (this._model.model && this._model.model === $event.dragDataTransfer) {
+        return; // conceptually, a parent node can not be dragged into its subtree
+      }
+      if (this.contentOverTimeout) {
+        clearTimeout(this.contentOverTimeout);
+      }
+      this.contentOverTimeout = setTimeout(() => {
+        this.ngZone.run(() => (this.expandService.expanded = true));
+        // since we are already in drag and dragStart is a past event,
+        //   new droppables could not join to party
+
+        // this.expandService.expanded = true;
+        // fire change detection
+        // this.changeDetectorRef.detectChanges();
+      }, 2000);
+    }
+  }
+  onContentDragLeave($event: ClrDragEvent<T>) {
+    if (this.contentOverTimeout) {
+      clearTimeout(this.contentOverTimeout);
+      delete this.contentOverTimeout;
+    }
+  }
+  onAnimationDone($event: AnimationEvent) {
+    this.eventBus.broadcastAnimation($event);
   }
 }

@@ -20,6 +20,9 @@ import { TreeFeaturesService } from './tree-features.service';
 import { TreeFocusManagerService } from './tree-focus-manager.service';
 import { ClrTreeNode } from './tree-node';
 import { KeyCodes } from './../../utils/enums/key-codes.enum';
+import { TreeDndManagerService } from './tree-dnd-manager.service';
+import { DroppableOverlapResolverService } from '../../utils/drag-and-drop/providers/droppable-overlap-resolver.service';
+import { DragAndDropEventBusService } from '../../utils/drag-and-drop/providers/drag-and-drop-event-bus.service';
 
 @Component({
   template: `<clr-tree-node #node [(clrSelected)]="selected" [(clrExpanded)]="expanded" [clrExpandable]="expandable">
@@ -42,6 +45,9 @@ interface TsApiContext {
   featureService: TreeFeaturesService<void>;
   expandService: IfExpandService;
   focusManagerService: TreeFocusManagerService<void>;
+  eventBus: DragAndDropEventBusService<void>;
+  overlapResolverService: DroppableOverlapResolverService<void>;
+  dndManagerService: TreeDndManagerService<void>;
 }
 
 export default function (): void {
@@ -69,6 +75,9 @@ export default function (): void {
         this.expandService = new IfExpandService();
         const stringsService = new ClrCommonStringsService();
         this.focusManagerService = new TreeFocusManagerService<void>();
+        this.eventBus = new DragAndDropEventBusService<void>();
+        this.overlapResolverService = new DroppableOverlapResolverService<void>(this.eventBus);
+        this.dndManagerService = new TreeDndManagerService<void>(this.focusManagerService, this.overlapResolverService);
         const platformID = { provide: PLATFORM_ID, useValue: 'browser' };
         this.parent = new ClrTreeNode(
           'parent',
@@ -78,6 +87,11 @@ export default function (): void {
           this.expandService,
           stringsService,
           this.focusManagerService,
+          this.dndManagerService,
+          null, // MYN ? might be refactored GlobalDragModeService
+          this.eventBus,
+          null, // MYN? NgZone
+          null, // MYN? DomAdapter
           null
         );
         this.node = new ClrTreeNode(
@@ -88,6 +102,11 @@ export default function (): void {
           this.expandService,
           stringsService,
           this.focusManagerService,
+          this.dndManagerService,
+          null, // MYN ? might be refactored GlobalDragModeService
+          this.eventBus,
+          null, // MYN? NgZone
+          null, // MYN? DomAdapter
           null
         );
       });

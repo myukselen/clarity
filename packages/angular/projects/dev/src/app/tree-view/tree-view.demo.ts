@@ -12,6 +12,7 @@ import { Component } from '@angular/core';
     <h2>Tree View</h2>
 
     <ul>
+      <li><a [routerLink]="['./dnd-eager-declarative']">Drag&Drop Eager declarative tree</a></li>
       <li><a [routerLink]="['./eager-declarative']">Eager declarative tree</a></li>
       <li><a [routerLink]="['./eager-recursive']">Eager recursive tree</a></li>
       <li><a [routerLink]="['./lazy-declarative']">Lazy declarative tree</a></li>

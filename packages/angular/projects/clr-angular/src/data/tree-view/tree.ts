@@ -10,14 +10,17 @@ import {
   ContentChildren,
   ElementRef,
   HostListener,
+  Inject,
   Input,
   OnDestroy,
   QueryList,
 } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { UNIQUE_ID, UNIQUE_ID_PROVIDER } from '../../utils/id-generator/id-generator.service';
 import { TreeFocusManagerService } from './tree-focus-manager.service';
 import { TreeFeaturesService, TREE_FEATURES_PROVIDER } from './tree-features.service';
 import { ClrTreeNode } from './tree-node';
+import { TreeDndManagerService } from './tree-dnd-manager.service';
 
 @Component({
   selector: 'clr-tree',
@@ -28,7 +31,7 @@ import { ClrTreeNode } from './tree-node';
       [children]="featuresService.recursion.root"
     ></clr-recursive-children>
   `,
-  providers: [TREE_FEATURES_PROVIDER, TreeFocusManagerService],
+  providers: [UNIQUE_ID_PROVIDER, TREE_FEATURES_PROVIDER, TreeFocusManagerService, TreeDndManagerService],
   host: {
     '[attr.tabindex]': 'tabindex',
     '[attr.role]': '"tree"',
@@ -37,8 +40,10 @@ import { ClrTreeNode } from './tree-node';
 })
 export class ClrTree<T> implements AfterContentInit, OnDestroy {
   constructor(
+    @Inject(UNIQUE_ID) public treeId: string,
     public featuresService: TreeFeaturesService<T>,
     private focusManagerService: TreeFocusManagerService<T>,
+    private dndManagerService: TreeDndManagerService<T>,
     private el: ElementRef
   ) {}
 
@@ -83,7 +88,22 @@ export class ClrTree<T> implements AfterContentInit, OnDestroy {
     // if node has no parent, it's a root node
     // for recursive tree, this.rootNodes registers also nested children
     // so we have to use filter to extract the ones that are truly root nodes
-    this.focusManagerService.rootNodeModels = this.rootNodes.map(node => node._model).filter(node => !node.parent);
+    const rootNodeModels = this.rootNodes.map(node => node._model).filter(node => !node.parent);
+    // set firstNode of nodes with parent
+    this.rootNodes
+      .map(node => node._model)
+      .map(node => {
+        if (node.parent) {
+          node.firstNode = node.parent.children.indexOf(node) === 0;
+        }
+      });
+    // set firstNode of roots
+    rootNodeModels.forEach(node => (node.firstNode = false));
+    if (rootNodeModels.length > 0) {
+      rootNodeModels[0].firstNode = true;
+    }
+    this.focusManagerService.rootNodeModels = rootNodeModels;
+    this.dndManagerService.rootNodeModels = rootNodeModels;
   }
 
   ngOnDestroy() {

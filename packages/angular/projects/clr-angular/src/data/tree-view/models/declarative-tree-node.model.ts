@@ -25,13 +25,20 @@ export class DeclarativeTreeNodeModel<T> extends TreeNodeModel<T> {
   children: DeclarativeTreeNodeModel<T>[];
 
   _addChild(child: DeclarativeTreeNodeModel<T>) {
+    if (this.children.length === 0) {
+      child.firstNode = true;
+    }
     this.children.push(child);
   }
 
   _removeChild(child: DeclarativeTreeNodeModel<T>) {
+    child.firstNode = false;
     const index = this.children.indexOf(child);
     if (index > -1) {
       this.children.splice(index, 1);
+    }
+    if (this.children.length > 0) {
+      this.children[0].firstNode = true;
     }
   }
 

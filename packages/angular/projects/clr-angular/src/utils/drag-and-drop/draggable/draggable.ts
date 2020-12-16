@@ -35,7 +35,7 @@ import { GlobalDragModeService } from '../providers/global-drag-mode.service';
     DragEventListenerService,
     DragHandleRegistrarService,
     DraggableSnapshotService,
-    GlobalDragModeService,
+    GlobalDragModeService, // ? tree-dnd-manager also needs this
     DomAdapter,
   ],
   host: { '[class.draggable]': 'true', '[class.being-dragged]': 'dragOn' },

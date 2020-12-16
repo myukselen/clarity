@@ -5,15 +5,75 @@
 @import './properties.tree-view';
 
 @include exports('tree-view.clarity') {
+  clr-tree {
+    display: block;
+    position: relative;
+    // [clrdroppableDelete] {  // MYN debug
+    //   background-color: rgba(0,0,0,0.2);
+    //   position: absolute;
+    //   height: 2px;
+    //   margin-top: -1px;
+    //   width: 100%;
+    // }
+    .draggable-ghost {
+      background: white;
+      border: 1px solid #bbbbbb;
+      border-left: 2px solid #8939ad;
+      border-radius: 3px 0 0 3px;
+      box-shadow: 0 3px 4px rgba(116, 116, 116, 0.3);
+    }
+    clr-drop-position {
+      &.droppable {
+        position: absolute;
+        display: none;
+        // display: inherit;  // MYN debug
+        // background-color: rgba(0,0,0,0.2);
+        // &.lastnode {
+        //   background-color: rgba(0,100,100,0.2);
+        // }
+
+        height: 0.81rem; //16px;
+        width: 100%;
+        margin-top: -0.405rem; //-8px;
+        &.draggable-match {
+          border: none;
+          display: inherit;
+        }
+        &.draggable-over {
+          border: none;
+        }
+        &.draggable-over:before {
+          content: '';
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          margin-top: 4px;
+          background: #8939ad;
+          border-radius: 50%;
+        }
+        &.draggable-over:after {
+          content: '';
+          position: absolute;
+          border-bottom: 2px #8939ad solid;
+          height: 100%;
+          width: 100%;
+          transform: translateY(-50%);
+        }
+      }
+    }
+  }
+
   .clr-tree-node {
     //Display
     display: block;
+    position: relative;
   }
 
   .clr-tree-node-content-container {
     //Display
     display: flex;
     align-items: center;
+    border: 0.05rem solid transparent; // so draggable-match will not enlarge
   }
 
   .clr-treenode-content {

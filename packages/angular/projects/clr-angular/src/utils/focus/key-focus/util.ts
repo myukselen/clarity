@@ -4,7 +4,7 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { KeyCodes, IEKeyCodes } from './../../enums/key-codes.enum';
+import { KeyCodes, IEKeyCodes, ChromeKeyCodes } from './../../enums/key-codes.enum';
 
 export function keyValidator(key: string) {
   if (key === KeyCodes.ArrowUp || key === IEKeyCodes.ArrowUp) {
@@ -15,7 +15,7 @@ export function keyValidator(key: string) {
     return KeyCodes.ArrowRight;
   } else if (key === KeyCodes.ArrowLeft || key === IEKeyCodes.ArrowLeft) {
     return KeyCodes.ArrowLeft;
-  } else if (key === KeyCodes.Space || key === IEKeyCodes.Space) {
+  } else if (key === KeyCodes.Space || key === IEKeyCodes.Space || key === ChromeKeyCodes.Space) {
     return KeyCodes.Space;
   } else if (key === KeyCodes.Escape || key === IEKeyCodes.Escape) {
     return KeyCodes.Escape;

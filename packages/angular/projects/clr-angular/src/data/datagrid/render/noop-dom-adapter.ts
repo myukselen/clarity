@@ -11,9 +11,19 @@
 
 import { Injectable } from '@angular/core';
 import { DomAdapter } from '../../../utils/dom-adapter/dom-adapter';
+import { DragPointPosition } from '../../../utils/drag-and-drop/interfaces/drag-event.interface';
 
 @Injectable()
 export class NoopDomAdapter implements DomAdapter {
+  centerOfRect(clientRect: ClientRect): DragPointPosition {
+    return {
+      pageX: 0,
+      pageY: 0,
+    };
+  }
+  convertRemToPixel(rem: number): number {
+    return 0;
+  }
   // @ts-ignore
   userDefinedWidth(element: any): number {
     return 0;

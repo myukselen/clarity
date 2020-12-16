@@ -3,7 +3,7 @@
   ~ This software is released under MIT license.
   ~ The full license information can be found in LICENSE in the root directory of this project.
   -->
-
+<clr-drop-position *ngIf="_model.firstNode" #dropPositionBefore positionId="before-{{nodeId}}" clrDroppable (clrDrop)="insertBeforeNode($event)"></clr-drop-position>
 <div
   #contentContainer
   role="treeitem"
@@ -11,6 +11,9 @@
   tabindex="-1"
   [attr.aria-expanded]="isExpandable() ? expanded : null"
   [attr.aria-selected]="ariaSelected"
+  clrDroppable [clrDropTolerance]="nodeDropTolerance" 
+  (clrDrop)="appendIntoNode($event)"
+  (clrDragEnter)="onContentDragEnter($event)" (clrDragLeave)="onContentDragLeave($event)"
   (keydown)="onKeyDown($event)"
   (focus)="broadcastFocusOnContainer()"
 >
@@ -61,9 +64,11 @@
 <div
   class="clr-treenode-children"
   [@toggleChildrenAnim]="expandService.expanded ? 'expanded' : 'collapsed'"
+  (@toggleChildrenAnim.done)= "onAnimationDone($event)"
   [attr.role]="isExpandable() && !featuresService.recursion ? 'group' : null"
 >
   <ng-content select="clr-tree-node"></ng-content>
   <ng-content select="[clrIfExpanded]"></ng-content>
   <clr-recursive-children [parent]="_model"></clr-recursive-children>
 </div>
+<clr-drop-position class="lastnode" #dropPositionAfter positionId="after-{{nodeId}}" clrDroppable (clrDrop)="insertAfterNode($event)"></clr-drop-position>
