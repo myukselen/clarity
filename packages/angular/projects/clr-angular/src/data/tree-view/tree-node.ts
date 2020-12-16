@@ -127,6 +127,7 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
   }
 
   _model: TreeNodeModel<T>;
+  isDraggableOver = false;
 
   isExpandable() {
     if (typeof this.expandable !== 'undefined') {
@@ -220,6 +221,16 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
       }),
       this.focusManager.focusChange.subscribe(nodeId => {
         this.checkTabIndex(nodeId);
+      })
+    );
+    this.subscriptions.push(
+      this.dndManager.draggableOverRequest.subscribe(nodeId => {
+        this.isDraggableOver = nodeId === this.nodeId;
+      }),
+      this.dndManager.dropRequest.subscribe(dropEvent => {
+        if (this.isDraggableOver) {
+          this.dropEmitter.emit(dropEvent);
+        }
       })
     );
   }

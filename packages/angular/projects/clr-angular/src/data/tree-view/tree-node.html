@@ -8,6 +8,7 @@
   #contentContainer
   role="treeitem"
   class="clr-tree-node-content-container"
+  [ngClass]="{'draggable-over' :isDraggableOver}"
   tabindex="-1"
   [attr.aria-expanded]="isExpandable() ? expanded : null"
   [attr.aria-selected]="ariaSelected"
