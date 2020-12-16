@@ -18,6 +18,7 @@ import { TreeNodeRoutingRevolverDemo } from './tree-node-routing/tree-node-routi
 import { TreeNodeRoutingRubberSoulDemo } from './tree-node-routing/tree-node-routing-rubber-soul';
 import { PreSelectionDemo } from './pre-selection/pre-selection';
 import { DndEagerDeclarativeTreeDemo } from './dnd-eager-declarative-tree/dnd-eager-declarative-tree';
+import { DndEagerRecursiveTreeDemo } from './dnd-eager-recursive-tree/dnd-eager-recursive-tree';
 
 const ROUTES: Routes = [
   {
@@ -26,6 +27,7 @@ const ROUTES: Routes = [
     children: [
       { path: '', redirectTo: 'dnd-eager-declarative', pathMatch: 'full' },
       { path: 'dnd-eager-declarative', component: DndEagerDeclarativeTreeDemo },
+      { path: 'dnd-eager-recursive', component: DndEagerRecursiveTreeDemo },
       { path: 'eager-declarative', component: EagerDeclarativeTreeDemo },
       { path: 'eager-recursive', component: EagerRecursiveTreeDemo },
       { path: 'lazy-declarative', component: LazyDeclarativeTreeDemo },

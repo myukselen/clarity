@@ -22,6 +22,7 @@ import { TreeNodeRoutingRevolverDemo } from './tree-node-routing/tree-node-routi
 import { TreeNodeRoutingRubberSoulDemo } from './tree-node-routing/tree-node-routing-rubber-soul';
 import { PreSelectionDemo } from './pre-selection/pre-selection';
 import { DndEagerDeclarativeTreeDemo } from './dnd-eager-declarative-tree/dnd-eager-declarative-tree';
+import { DndEagerRecursiveTreeDemo } from './dnd-eager-recursive-tree/dnd-eager-recursive-tree';
 
 @NgModule({
   imports: [CommonModule, ClarityModule, ROUTING, UtilsDemoModule],
@@ -38,6 +39,7 @@ import { DndEagerDeclarativeTreeDemo } from './dnd-eager-declarative-tree/dnd-ea
     TreeNodeRoutingRubberSoulDemo,
     PreSelectionDemo,
     DndEagerDeclarativeTreeDemo,
+    DndEagerRecursiveTreeDemo,
   ],
   exports: [TreeViewDemo],
 })
