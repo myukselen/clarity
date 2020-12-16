@@ -12,6 +12,7 @@ export abstract class TreeNodeModel<T> {
   expanded: boolean;
   selected = new BehaviorSubject<ClrSelectedState>(ClrSelectedState.UNSELECTED);
   firstNode = false; // parent or tree set this property
+  draggable = true;
   model: T | null;
   /*
    * Ideally, I would like to use a polymorphic this type here to ensure homogeneity of the tree, something like:

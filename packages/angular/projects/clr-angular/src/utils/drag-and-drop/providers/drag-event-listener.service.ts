@@ -27,6 +27,7 @@ export class DragEventListenerService<T> {
   private dragEnd: Subject<DragEventInterface<T>> = new Subject<DragEventInterface<T>>();
 
   private hasDragStarted = false;
+  public enabled = true;  // how to bypass clrDraggable on clrTreeNode? do not use it at first place?
 
   private dragStartDelayTimeout: ReturnType<typeof setTimeout>;
 
@@ -94,6 +95,9 @@ export class DragEventListenerService<T> {
 
   private customDragEvent(element: Node, startOnEvent: string, moveOnEvent: string, endOnEvent: string): () => void {
     return this.renderer.listen(element, startOnEvent, (startEvent: MouseEvent | TouchEvent) => {
+      if (!this.enabled) {
+        return;
+      }
       // save the initial point to initialPosition
       // this will be used to calculate how far the draggable has been dragged from its initial position
       this.initialPosition = {

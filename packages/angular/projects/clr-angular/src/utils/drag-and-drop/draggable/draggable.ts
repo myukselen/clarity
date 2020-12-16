@@ -35,7 +35,7 @@ import { GlobalDragModeService } from '../providers/global-drag-mode.service';
     DragHandleRegistrarService,
     DraggableSnapshotService,
   ],
-  host: { '[class.draggable]': 'true', '[class.being-dragged]': 'dragOn' },
+  host: { '[class.draggable]': 'enabled', '[class.being-dragged]': 'dragOn' },
 })
 export class ClrDraggable<T> implements AfterContentInit, OnDestroy {
   private draggableEl: any;
@@ -67,6 +67,14 @@ export class ClrDraggable<T> implements AfterContentInit, OnDestroy {
   @Input('clrGroup')
   set group(value: string | string[]) {
     this.dragEventListener.group = value;
+  }
+
+  @Input('clrDraggableEnabled')
+  set enabled(value: boolean) {
+    this.dragEventListener.enabled = value;
+  }
+  get enabled(): boolean {
+    return this.dragEventListener.enabled;
   }
 
   @Input('clrDragStartDelay')

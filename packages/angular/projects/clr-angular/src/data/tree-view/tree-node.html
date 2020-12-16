@@ -50,7 +50,10 @@
     />
     <label for="{{nodeId}}-check" class="clr-control-label"></label>
   </div>
-  <div class="clr-treenode-content" (mousedown)="focusTreeNode()">
+  <div class="clr-treenode-content" 
+    [clrDraggable]="_model.model"
+    [clrDraggableEnabled]="_model.draggable"
+    (mousedown)="focusTreeNode()">
     <ng-content></ng-content>
     <div class="clr-sr-only" *ngIf="featuresService.selectable">
       <span *ngIf="ariaSelected">

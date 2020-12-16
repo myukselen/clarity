@@ -21,6 +21,7 @@ import { TreeFocusManagerService } from './tree-focus-manager.service';
 import { TreeFeaturesService, TREE_FEATURES_PROVIDER } from './tree-features.service';
 import { ClrTreeNode } from './tree-node';
 import { TreeDndManagerService } from './tree-dnd-manager.service';
+import { delay, startWith, tap } from 'rxjs/operators';
 
 @Component({
   selector: 'clr-tree',
@@ -76,11 +77,16 @@ export class ClrTree<T> implements AfterContentInit, OnDestroy {
   @ContentChildren(ClrTreeNode) private rootNodes: QueryList<ClrTreeNode<T>>;
 
   ngAfterContentInit() {
-    this.setRootNodes();
     this.subscriptions.push(
-      this.rootNodes.changes.subscribe(() => {
-        this.setRootNodes();
-      })
+      this.rootNodes.changes
+        .pipe(
+          startWith(null),
+          delay(0),
+          tap(() => {
+            this.setRootNodes();
+          })
+        )
+        .subscribe()
     );
   }
 

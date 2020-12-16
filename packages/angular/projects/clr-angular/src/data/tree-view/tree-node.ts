@@ -178,11 +178,15 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
   // needed to bypass node expansion when hovering ourself over
   // TODO: problem: deactivate clrDraggable so that we dont drag an expanded tree whoolly
   // @Host injection to reach ClrDraggable?
-  @Input('clrDraggable')
+  @Input('clrDraggableData')
   set modelData(value: T) {
     if (!this.featuresService.recursion) {
       this._model.model = value;
     }
+  }
+  @Input('clrDraggableEnabled')
+  set modeDraggable(value: boolean) {
+    this._model.draggable = value;
   }
   @Input('clrGroup') group: string | string[];
 
