@@ -77,7 +77,7 @@ export default function (): void {
         this.focusManagerService = new TreeFocusManagerService<void>();
         this.eventBus = new DragAndDropEventBusService<void>();
         this.overlapResolverService = new DroppableOverlapResolverService<void>(this.eventBus);
-        this.dndManagerService = new TreeDndManagerService<void>(this.focusManagerService, this.overlapResolverService);
+        this.dndManagerService = new TreeDndManagerService<void>(this.focusManagerService, this.overlapResolverService, null, this.eventBus); // MYN? GlobalDragModeService
         const platformID = { provide: PLATFORM_ID, useValue: 'browser' };
         this.parent = new ClrTreeNode(
           'parent',
@@ -88,7 +88,6 @@ export default function (): void {
           stringsService,
           this.focusManagerService,
           this.dndManagerService,
-          null, // MYN ? might be refactored GlobalDragModeService
           this.eventBus,
           null, // MYN? NgZone
           null, // MYN? DomAdapter
@@ -103,7 +102,6 @@ export default function (): void {
           stringsService,
           this.focusManagerService,
           this.dndManagerService,
-          null, // MYN ? might be refactored GlobalDragModeService
           this.eventBus,
           null, // MYN? NgZone
           null, // MYN? DomAdapter

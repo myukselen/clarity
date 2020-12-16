@@ -114,15 +114,10 @@ export class TreeDndManagerService<T> {
     this._rootNodeModels = rootNodeModels;
     this.treeTraversal.rootNodeModels = rootNodeModels;
   }
-  public globalDragModeService: GlobalDragModeService; // could not inject from constructor :(
-  public eventBus: DragAndDropEventBusService<T>; // could not inject from constructor :(
-  // public dropPositions: Map<string, ClrDropPositionComponent> = new Map<string, ClrDropPositionComponent>();
 
+  // should ve focus or scroll?
   // .scrollIntoView({block: 'nearest', behavior: 'smooth'})
-  // .getBoundingClientRect ref: https://stackoverflow.com/a/11396681/8776239
-
-  // overlapping position handling
-  // position top to list? tree traversal
+  // current implementation focuses to nodes
 
   public dragMode = false;
   public group: string | string[];
@@ -148,7 +143,9 @@ export class TreeDndManagerService<T> {
 
   constructor(
     private focusManager: TreeFocusManagerService<T>,
-    private overlapResolver: DroppableOverlapResolverService<T>
+    private overlapResolver: DroppableOverlapResolverService<T>,  // just to instantiate?
+    private globalDragModeService: GlobalDragModeService,
+    private eventBus: DragAndDropEventBusService<T>
   ) {}
 
   addDropPosition(nodeId: string, dropPosition: ClrDropPositionComponent<T>) {

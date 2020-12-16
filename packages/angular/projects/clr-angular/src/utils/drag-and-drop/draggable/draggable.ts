@@ -19,7 +19,6 @@ import {
 import { Input } from '@angular/core';
 import { Subscription } from 'rxjs';
 
-import { DomAdapter } from '../../dom-adapter/dom-adapter';
 import { ClrDragEvent } from '../drag-event';
 import { ClrDraggableGhost } from '../draggable-ghost';
 import { ClrIfDragged } from '../if-dragged';
@@ -35,8 +34,6 @@ import { GlobalDragModeService } from '../providers/global-drag-mode.service';
     DragEventListenerService,
     DragHandleRegistrarService,
     DraggableSnapshotService,
-    GlobalDragModeService, // ? tree-dnd-manager also needs this
-    DomAdapter,
   ],
   host: { '[class.draggable]': 'true', '[class.being-dragged]': 'dragOn' },
 })

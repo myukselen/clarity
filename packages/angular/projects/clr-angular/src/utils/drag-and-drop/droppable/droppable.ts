@@ -14,7 +14,6 @@ import { DragAndDropEventBusService } from '../providers/drag-and-drop-event-bus
 
 @Directive({
   selector: '[clrDroppable]',
-  providers: [DomAdapter],
   host: { '[class.droppable]': 'true', '[class.draggable-match]': 'isDraggableMatch' },
 })
 export class ClrDroppable<T> implements OnInit, OnDestroy {

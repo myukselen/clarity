@@ -47,7 +47,6 @@ import { ClrTreeDropEvent } from './models/tree-drop-event';
 import { ClrDropPositionType } from './models/drop-position-type.enum';
 import { DragAndDropEventBusService } from '../../utils/drag-and-drop/providers/drag-and-drop-event-bus.service';
 import { DomAdapter } from '../../utils/dom-adapter/dom-adapter';
-import { GlobalDragModeService } from '../../utils/drag-and-drop/providers/global-drag-mode.service';
 
 const LVIEW_CONTEXT_INDEX = 8;
 
@@ -94,7 +93,6 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
     public commonStrings: ClrCommonStringsService,
     private focusManager: TreeFocusManagerService<T>,
     private dndManager: TreeDndManagerService<T>, // naming? clrTree uses ..Service
-    private globalDragModeService: GlobalDragModeService,
     private eventBus: DragAndDropEventBusService<T>,
     private ngZone: NgZone,
     private domAdapter: DomAdapter,
@@ -122,8 +120,6 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
       top: toleranceValue,
       bottom: toleranceValue,
     };
-    this.dndManager.globalDragModeService = globalDragModeService; // could not grab in dndManager via DI
-    this.dndManager.eventBus = eventBus; // could not grab in dndManager via DI
   }
 
   _model: TreeNodeModel<T>;
@@ -179,9 +175,14 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
     this.expandService.expanded = value;
   }
   // declerative tree can not now its model so, hoping to utilize clrDraggable
+  // needed to bypass node expansion when hovering ourself over
+  // TODO: problem: deactivate clrDraggable so that we dont drag an expanded tree whoolly
+  // @Host injection to reach ClrDraggable?
   @Input('clrDraggable')
   set modelData(value: T) {
-    this._model.model = value;
+    if (!this.featuresService.recursion) {
+      this._model.model = value;
+    }
   }
   @Input('clrGroup') group: string | string[];
 

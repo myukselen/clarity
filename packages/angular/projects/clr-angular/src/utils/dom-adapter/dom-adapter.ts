@@ -13,7 +13,7 @@
 import { Injectable } from '@angular/core';
 import { DragPointPosition } from '../drag-and-drop/interfaces/drag-event.interface';
 
-@Injectable()
+@Injectable({ providedIn: 'root' })
 export class DomAdapter {
   centerOfRect(clientRect: ClientRect): DragPointPosition {
     return {
