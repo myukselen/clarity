@@ -380,10 +380,23 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
         this.dndManager.traverseDown(this._model);
         break;
       case KeyCodes.ArrowRight:
-        this.dndManager.traverseRight(this._model);
+        if (this.dndManager.isCurrentTargetTypeParent()) {
+          // lets solve it here
+          if (!this.expanded && this.isExpandable()) {
+            this.expandService.expanded = true;
+          }
+        } else {
+          this.dndManager.traverseRight(this._model);
+        }
         break;
       case KeyCodes.ArrowLeft:
-        this.dndManager.traverseLeft(this._model);
+        if (this.dndManager.isCurrentTargetTypeParent()) {
+          if (this.expanded) {
+            this.expandService.expanded = false;
+          }
+        } else {
+          this.dndManager.traverseLeft(this._model);
+        }
         break;
       case KeyCodes.Home:
         // TODO

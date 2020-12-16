@@ -158,6 +158,10 @@ export class TreeDndManagerService<T> {
     console.log('remove pos', nodeId, dropPosition);
   }
 
+  isCurrentTargetTypeParent() {
+    return this.targetType === ClrDropTargetType.PARENT;
+  }
+
   start(model: TreeNodeModel<T>, clientCenter: DragPointPosition, group: string | string[] | null) {
     this.dragMode = true;
     this.group = group;
@@ -333,8 +337,7 @@ export class TreeDndManagerService<T> {
 
   traverseRight(model: TreeNodeModel<T>) {
     if (this.targetType === ClrDropTargetType.PARENT) {
-      // TODO change expand node
-      console.log('TODO expand to drop');
+      // It should be handled in ClrTreeNode
     } else {
       if (model.children && model.children.length > 0) {
         const lastChild = model.children[model.children.length - 1];
@@ -349,8 +352,7 @@ export class TreeDndManagerService<T> {
 
   traverseLeft(model: TreeNodeModel<T>) {
     if (this.targetType === ClrDropTargetType.PARENT) {
-      // TODO change expand node
-      console.log('TODO collapse to drop');
+      // It should be handled in ClrTreeNode
     } else {
       if (model.parent) {
         this.focusManager.focusNode(model.parent);
