@@ -15,6 +15,7 @@ import { DragPointPosition } from '../interfaces/drag-event.interface';
 export class MockDragEventListener {
   private listeners: (() => void)[];
   public draggableEl: any;
+  public enabled = true;
   public dragStarted: Subject<any> = new Subject<any>();
   public dragMoved: Subject<any> = new Subject<any>();
   public dragEnded: Subject<any> = new Subject<any>();

@@ -92,7 +92,7 @@ export class ClrTreeNode<T> implements OnInit, AfterViewInit, OnDestroy {
     public expandService: IfExpandService,
     public commonStrings: ClrCommonStringsService,
     private focusManager: TreeFocusManagerService<T>,
-    private dndManager: TreeDndManagerService<T>, // naming? clrTree uses ..Service
+    public dndManager: TreeDndManagerService<T>, // naming? clrTree uses ..Service
     private eventBus: DragAndDropEventBusService<T>,
     private ngZone: NgZone,
     private domAdapter: DomAdapter,

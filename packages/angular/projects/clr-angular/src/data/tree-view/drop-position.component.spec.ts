@@ -1,7 +1,12 @@
 import { Component, ViewChild } from '@angular/core';
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { spec, TestContext } from '../../utils/testing/helpers.spec';
 
 import { ClrDropPositionComponent } from './drop-position.component';
+import { TreeDndManagerService } from './tree-dnd-manager.service';
+import { TreeFocusManagerService } from './tree-focus-manager.service';
+import { ClrTreeViewModule } from './tree-view.module';
+import { ClrIconModule } from '../../icon/icon.module';
 
 @Component({
   template: `<clr-drop-position #dropPositionBefore></clr-drop-position>`,
@@ -10,23 +15,33 @@ class TestComponent {
   @ViewChild('dropPositionBefore') dropPositionBefore: ClrDropPositionComponent<void>;
 }
 
-describe('ClrDropPositionComponent', () => {
-  let component: ClrDropPositionComponent<void>;
-  let fixture: ComponentFixture<TestComponent>;
+export default function (): void {
+  describe('ClrDropPosition Component', function () {
+    type Context = TestContext<ClrDropPositionComponent<void>, TestComponent>;
 
-  beforeEach(async(() => {
-    TestBed.configureTestingModule({
-      declarations: [TestComponent],
-    }).compileComponents();
-  }));
+    spec(ClrDropPositionComponent, TestComponent, ClrTreeViewModule, {
+      imports: [NoopAnimationsModule, ClrIconModule],
+      providers: [TreeFocusManagerService, TreeDndManagerService],
+    });
 
-  beforeEach(() => {
-    fixture = TestBed.createComponent(TestComponent);
-    component = fixture.componentInstance.dropPositionBefore;
-    fixture.detectChanges();
+    /*
+    let fixture: ComponentFixture<TestComponent>;
+    let component: ClrDropPositionComponent<void>;
+
+    beforeEach(() => {
+      TestBed.configureTestingModule({
+        declarations: [TestComponent],
+        imports: [ClrTreeViewModule, NoopAnimationsModule],
+      });
+
+      fixture = TestBed.createComponent(TestComponent);
+      component = fixture.componentInstance.dropPositionBefore;
+      fixture.detectChanges();
+    });
+    */
+
+    it('should create', function (this: Context) {
+      expect(this.hostComponent).toBeTruthy();
+    });
   });
-
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-});
+}

@@ -30,11 +30,7 @@ import { GlobalDragModeService } from '../providers/global-drag-mode.service';
 
 @Directive({
   selector: '[clrDraggable]',
-  providers: [
-    DragEventListenerService,
-    DragHandleRegistrarService,
-    DraggableSnapshotService,
-  ],
+  providers: [DragEventListenerService, DragHandleRegistrarService, DraggableSnapshotService],
   host: { '[class.draggable]': 'enabled', '[class.being-dragged]': 'dragOn' },
 })
 export class ClrDraggable<T> implements AfterContentInit, OnDestroy {

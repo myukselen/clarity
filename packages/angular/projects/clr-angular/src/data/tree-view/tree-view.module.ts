@@ -18,11 +18,17 @@ import { angleIcon, ClarityIcons } from '@cds/core/icon';
 import { ClrDragAndDropModule } from '../../utils/drag-and-drop/drag-and-drop.module';
 import { ClrDropPositionComponent } from './drop-position.component';
 
-export const CLR_TREE_VIEW_DIRECTIVES: Type<any>[] = [ClrTree, ClrTreeNode, ClrRecursiveForOf, ClrTreeNodeLink];
+export const CLR_TREE_VIEW_DIRECTIVES: Type<any>[] = [
+  ClrTree,
+  ClrTreeNode,
+  ClrRecursiveForOf,
+  ClrTreeNodeLink,
+  ClrDropPositionComponent,
+];
 
 @NgModule({
   imports: [CommonModule, ClrIconModule, ClrLoadingModule, ClrDragAndDropModule],
-  declarations: [CLR_TREE_VIEW_DIRECTIVES, RecursiveChildren, ClrDropPositionComponent],
+  declarations: [CLR_TREE_VIEW_DIRECTIVES, RecursiveChildren],
   exports: [CLR_TREE_VIEW_DIRECTIVES],
 })
 export class ClrTreeViewModule {

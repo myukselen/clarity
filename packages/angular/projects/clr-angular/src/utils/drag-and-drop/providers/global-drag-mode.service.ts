@@ -11,8 +11,8 @@ import { Injectable, Renderer2, RendererFactory2 } from '@angular/core';
 export class GlobalDragModeService {
   private renderer: Renderer2;
   constructor(rendererFactory: RendererFactory2) {
-    this.renderer = rendererFactory.createRenderer(null, null);  // see https://github.com/angular/angular/issues/17824#issuecomment-353239017
-   }
+    this.renderer = rendererFactory.createRenderer(null, null); // see https://github.com/angular/angular/issues/17824#issuecomment-353239017
+  }
 
   enter(): void {
     this.renderer.addClass(document.body, 'in-drag');

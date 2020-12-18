@@ -9,20 +9,33 @@ import { DragEventType } from '../interfaces/drag-event.interface';
 import { DragAndDropEventBusService } from './drag-and-drop-event-bus.service';
 
 export class MockDragAndDropEventBus {
+  private activeDragStartEvent: any;
+
   public dragStarted: Subject<any> = new Subject<any>();
+  public dragHitTested: Subject<any> = new Subject<any>();
+  public dragHited: Subject<any> = new Subject<any>();
+  public dragHitFinalized: Subject<any> = new Subject<any>();
   public dragMoved: Subject<any> = new Subject<any>();
   public dragEnded: Subject<any> = new Subject<any>();
   public dropped: Subject<any> = new Subject<any>();
+  public animation: Subject<any> = new Subject<any>();
 
   broadcast(event: any): void {
     switch (event.type) {
       case DragEventType.DRAG_START:
+        this.activeDragStartEvent = event;
         this.dragStarted.next(event);
         break;
       case DragEventType.DRAG_MOVE:
+        this.dragHitTested.next(event);
+        this.dragHitFinalized.next(event);
         this.dragMoved.next(event);
         break;
+      case DragEventType.DRAG_HIT:
+        this.dragHited.next(event);
+        break;
       case DragEventType.DRAG_END:
+        delete this.activeDragStartEvent;
         this.dragEnded.next(event);
         break;
       case DragEventType.DROP:
@@ -31,6 +44,15 @@ export class MockDragAndDropEventBus {
       default:
         break;
     }
+  }
+
+  broadcastAnimation(event: any) {
+    // right now only done event from tree-node is sent
+    this.animation.next(event);
+  }
+
+  getActiveDragStartEvent(): any {
+    return this.activeDragStartEvent;
   }
 }
 

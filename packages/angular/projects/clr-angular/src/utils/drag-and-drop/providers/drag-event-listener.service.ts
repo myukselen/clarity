@@ -27,7 +27,7 @@ export class DragEventListenerService<T> {
   private dragEnd: Subject<DragEventInterface<T>> = new Subject<DragEventInterface<T>>();
 
   private hasDragStarted = false;
-  public enabled = true;  // how to bypass clrDraggable on clrTreeNode? do not use it at first place?
+  public enabled = true; // how to bypass clrDraggable on clrTreeNode? do not use it at first place?
 
   private dragStartDelayTimeout: ReturnType<typeof setTimeout>;
 

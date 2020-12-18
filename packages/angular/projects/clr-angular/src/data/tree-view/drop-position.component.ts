@@ -7,9 +7,10 @@ const CLASS_DRAGGABLE_OVER = 'draggable-over';
 @Component({
   selector: 'clr-drop-position',
   template: ``,
-  styles: [':host { display: blocsk; }'],
+  styles: [':host { display: block; }'],
 })
 export class ClrDropPositionComponent<T> implements OnInit, OnDestroy {
+  // MYN: get rid of component suffix?
   constructor(public el: ElementRef, private dndManager: TreeDndManagerService<T>) {}
 
   @Input() positionId: string;

@@ -143,7 +143,7 @@ export class TreeDndManagerService<T> {
 
   constructor(
     private focusManager: TreeFocusManagerService<T>,
-    private overlapResolver: DroppableOverlapResolverService<T>,  // just to instantiate?
+    private overlapResolver: DroppableOverlapResolverService<T>, // just to instantiate?
     private globalDragModeService: GlobalDragModeService,
     private eventBus: DragAndDropEventBusService<T>
   ) {}

@@ -4,7 +4,7 @@
  * The full license information can be found in LICENSE in the root directory of this project.
  */
 
-import { Component, ViewChild, PLATFORM_ID } from '@angular/core';
+import { Component, ViewChild, PLATFORM_ID, NgZone } from '@angular/core';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { RecursiveTreeNodeModel } from './models/recursive-tree-node.model';
 
@@ -23,6 +23,8 @@ import { KeyCodes } from './../../utils/enums/key-codes.enum';
 import { TreeDndManagerService } from './tree-dnd-manager.service';
 import { DroppableOverlapResolverService } from '../../utils/drag-and-drop/providers/droppable-overlap-resolver.service';
 import { DragAndDropEventBusService } from '../../utils/drag-and-drop/providers/drag-and-drop-event-bus.service';
+import { TestBed } from '@angular/core/testing';
+import { DomAdapter } from '../../utils/dom-adapter/dom-adapter';
 
 @Component({
   template: `<clr-tree-node #node [(clrSelected)]="selected" [(clrExpanded)]="expanded" [clrExpandable]="expandable">
@@ -48,6 +50,8 @@ interface TsApiContext {
   eventBus: DragAndDropEventBusService<void>;
   overlapResolverService: DroppableOverlapResolverService<void>;
   dndManagerService: TreeDndManagerService<void>;
+  ngZone: NgZone;
+  domAdapter: DomAdapter;
 }
 
 export default function (): void {
@@ -57,7 +61,7 @@ export default function (): void {
     describe('Providers', function () {
       spec(ClrTreeNode, TestComponent, ClrTreeViewModule, {
         imports: [NoopAnimationsModule, ClrIconModule],
-        providers: [TreeFocusManagerService],
+        providers: [TreeFocusManagerService, TreeDndManagerService],
       });
 
       it('declares a unique id provider', function (this: Context) {
@@ -77,7 +81,14 @@ export default function (): void {
         this.focusManagerService = new TreeFocusManagerService<void>();
         this.eventBus = new DragAndDropEventBusService<void>();
         this.overlapResolverService = new DroppableOverlapResolverService<void>(this.eventBus);
-        this.dndManagerService = new TreeDndManagerService<void>(this.focusManagerService, this.overlapResolverService, null, this.eventBus); // MYN? GlobalDragModeService
+        this.dndManagerService = new TreeDndManagerService<void>(
+          this.focusManagerService,
+          this.overlapResolverService,
+          null,
+          this.eventBus
+        ); // MYN? GlobalDragModeService
+        this.ngZone = TestBed.get(NgZone);
+        this.domAdapter = TestBed.get(DomAdapter);
         const platformID = { provide: PLATFORM_ID, useValue: 'browser' };
         this.parent = new ClrTreeNode(
           'parent',
@@ -89,8 +100,8 @@ export default function (): void {
           this.focusManagerService,
           this.dndManagerService,
           this.eventBus,
-          null, // MYN? NgZone
-          null, // MYN? DomAdapter
+          this.ngZone,
+          this.domAdapter,
           null
         );
         this.node = new ClrTreeNode(
@@ -103,8 +114,8 @@ export default function (): void {
           this.focusManagerService,
           this.dndManagerService,
           this.eventBus,
-          null, // MYN? NgZone
-          null, // MYN? DomAdapter
+          this.ngZone,
+          this.domAdapter,
           null
         );
       });
@@ -207,7 +218,7 @@ export default function (): void {
     describe('Template API', function () {
       spec(ClrTreeNode, TestComponent, ClrTreeViewModule, {
         imports: [NoopAnimationsModule, ClrIconModule],
-        providers: [TreeFocusManagerService],
+        providers: [TreeFocusManagerService, TreeDndManagerService],
       });
 
       it('offers a [(clrSelected)] two-way binding, but skips emitting output when setting input', function (this: Context) {
@@ -239,7 +250,7 @@ export default function (): void {
     describe('View', function () {
       spec(ClrTreeNode, TestComponent, ClrTreeViewModule, {
         imports: [NoopAnimationsModule, ClrIconModule],
-        providers: [TreeFocusManagerService],
+        providers: [TreeFocusManagerService, TreeDndManagerService],
       });
 
       it('projects content', function (this: Context) {
@@ -344,7 +355,7 @@ export default function (): void {
     describe('A11y and Focus Management', function () {
       spec(ClrTreeNode, TestComponent, ClrTreeViewModule, {
         imports: [NoopAnimationsModule, ClrIconModule],
-        providers: [TreeFocusManagerService],
+        providers: [TreeFocusManagerService, TreeDndManagerService],
       });
 
       let contentContainer: HTMLElement;
@@ -425,13 +436,13 @@ export default function (): void {
         expect(this.clarityDirective.selected as ClrSelectedState).toEqual(ClrSelectedState.UNSELECTED);
       });
 
-      it('takes default action which is toggling selection state on Space key if node is selectable', function (this: Context) {
-        this.clarityDirective.selected = ClrSelectedState.UNSELECTED;
-        expect(this.clarityDirective.selected as ClrSelectedState).toBe(ClrSelectedState.UNSELECTED);
+      it('grabs node on Space key for drag and drop if node is draggable', function (this: Context) {
+        this.clarityDirective.dndManager.dragMode = false;
+        expect(this.clarityDirective.dndManager.dragMode as boolean).toBe(false);
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.Space }));
-        expect(this.clarityDirective.selected as ClrSelectedState).toBe(ClrSelectedState.SELECTED);
+        expect(this.clarityDirective.dndManager.dragMode as boolean).toBe(true);
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.Space }));
-        expect(this.clarityDirective.selected as ClrSelectedState).toBe(ClrSelectedState.UNSELECTED);
+        expect(this.clarityDirective.dndManager.dragMode as boolean).toBe(false);
       });
 
       it('calls focusManager.focusFirstVisibleNode on Home key', function (this: Context) {
@@ -459,7 +470,7 @@ export default function (): void {
       });
 
       it('expands collapsed node if expandable on ArrowRight key', function (this: Context) {
-        this.clarityDirective._model.children = [null]; // children array needs to have something
+        this.clarityDirective._model.children = [new DeclarativeTreeNodeModel<void>(null)]; // children array needs to have something
         expect(this.clarityDirective.expanded).toBeFalse();
         expect(this.clarityDirective.isExpandable()).toBeTrue();
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.ArrowRight }));
@@ -467,7 +478,7 @@ export default function (): void {
       });
 
       it('toggles aria-expanded on expanded property value change on node content container', function (this: Context) {
-        this.clarityDirective._model.children = [null]; // children array needs to have something
+        this.clarityDirective._model.children = [new DeclarativeTreeNodeModel<void>(null)]; // children array needs to have something
         expect(this.clarityDirective.expanded).toBeFalse();
         expect(contentContainer.getAttribute('aria-expanded')).toBe('false');
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.ArrowRight }));
@@ -477,7 +488,7 @@ export default function (): void {
       });
 
       it('calls focusManager.focusNodeBelow if node is already expanded on ArrowRight key', function (this: Context) {
-        this.clarityDirective._model.children = [null]; // children array needs to have something
+        this.clarityDirective._model.children = [new DeclarativeTreeNodeModel<void>(null)]; // children array needs to have something
         this.clarityDirective.expanded = true;
         spyOn(focusManager, 'focusNodeBelow');
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.ArrowRight }));
@@ -485,7 +496,7 @@ export default function (): void {
       });
 
       it('collapses expanded node on ArrowLeft key', function (this: Context) {
-        this.clarityDirective._model.children = [null]; // children array needs to have something
+        this.clarityDirective._model.children = [new DeclarativeTreeNodeModel<void>(null)]; // children array needs to have something
         this.clarityDirective.expanded = true;
         contentContainer.dispatchEvent(new KeyboardEvent('keydown', { key: KeyCodes.ArrowLeft }));
         expect(this.clarityDirective.expanded).toBeFalse();
